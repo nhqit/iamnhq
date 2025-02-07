@@ -181,7 +181,7 @@ function searchAndRefine(day, chapter)
 end
 
 -- Kiểm tra hết hạn
-local expirationDate = {year = 2025, month = 2, day = 5}
+local expirationDate = {year = 2025, month = 2, day = 10}
 
 function checkExpiration()
     local currentDate = os.date("*t")
