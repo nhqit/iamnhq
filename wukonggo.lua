@@ -221,6 +221,9 @@ function checkExpiration()
     end
 end
 
+-- Kiểm tra hạn sử dụng ngay khi chương trình bắt đầu
+checkExpiration()
+
 -- Kiểm tra sự tồn tại của file và chạy nếu đúng
 checkApp()  -- Kiểm tra ứng dụng
 
