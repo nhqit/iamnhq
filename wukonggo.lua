@@ -206,7 +206,7 @@ function searchAndRefine(day, chapter)
 end
 
 -- Ngày hết hạn sử dụng (theo định dạng: năm, tháng, ngày)
-local expirationDate = {year = 2025, month =02, day = 08}
+local expirationDate = {year = 2025, month =02, day = 09}
 
 -- Hàm kiểm tra ngày hết hạn
 function checkExpiration()
