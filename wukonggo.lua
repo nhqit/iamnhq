@@ -205,6 +205,22 @@ function searchAndRefine(day, chapter)
     gg.clearResults()
 end
 
+-- Ngày hết hạn sử dụng (theo định dạng: năm, tháng, ngày)
+local expirationDate = {year = 2025, month =02, day = 10}
+
+-- Hàm kiểm tra ngày hết hạn
+function checkExpiration()
+    local currentDate = os.date("*t")  -- Lấy ngày hiện tại (năm, tháng, ngày)
+
+    -- Kiểm tra xem ngày hiện tại có lớn hơn ngày hết hạn không
+    if currentDate.year > expirationDate.year or 
+       (currentDate.year == expirationDate.year and currentDate.month > expirationDate.month) or
+       (currentDate.year == expirationDate.year and currentDate.month == expirationDate.month and currentDate.day > expirationDate.day) then
+        gg.alert("Hạn sử dụng đã hết. Hãy liên hệ YTB: I'm NHQ.")
+        os.exit()  -- Thoát chương trình nếu hết hạn
+    end
+end
+
 -- Kiểm tra sự tồn tại của file và chạy nếu đúng
 checkApp()  -- Kiểm tra ứng dụng
 
