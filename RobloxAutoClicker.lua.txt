@@ -1,0 +1,399 @@
+local Players = game:GetService('Players')
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild('PlayerGui')
+local UserInputService = game:GetService('UserInputService')
+local RunService = game:GetService('RunService')
+
+-- Main GUI creation
+local gui = Instance.new('ScreenGui')
+gui.Name = 'AutoClickerGUI'
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.DisplayOrder = 10
+gui.IgnoreGuiInset = true
+gui.Parent = playerGui
+
+-- Color scheme - Using high-contrast colors suitable for elderly users
+local colors = {
+    background = Color3.fromRGB(40, 40, 50),
+    header = Color3.fromRGB(50, 50, 65),
+    text = Color3.fromRGB(255, 255, 255),
+    subtext = Color3.fromRGB(220, 220, 220),
+    button = Color3.fromRGB(70, 140, 70),      -- Green button for better visibility
+    buttonHover = Color3.fromRGB(100, 170, 100),
+    toggleOff = Color3.fromRGB(170, 60, 60),   -- Red for OFF
+    toggleOn = Color3.fromRGB(60, 170, 60),    -- Green for ON
+    input = Color3.fromRGB(60, 60, 75),
+    slider = Color3.fromRGB(60, 110, 200),     -- Blue slider
+}
+
+-- Main container - Made larger for easier visibility
+local mainFrame = Instance.new('Frame')
+mainFrame.Name = 'MainFrame'
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = colors.background
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.BorderSizePixel = 0
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.Size = UDim2.new(0, 350, 0, 0) -- Height will auto-adjust
+mainFrame.Parent = gui
+
+-- Round corners
+local corner = Instance.new('UICorner')
+corner.CornerRadius = UDim.new(0, 12)  -- Larger corner radius
+corner.Parent = mainFrame
+
+-- Shadow effect
+local shadow = Instance.new('ImageLabel')
+shadow.Name = 'Shadow'
+shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+shadow.BackgroundTransparency = 1
+shadow.BorderSizePixel = 0
+shadow.Position = UDim2.new(0.5, 0, 0.5, 4)
+shadow.Size = UDim2.new(1, 10, 1, 10)
+shadow.Image = 'rbxassetid://1316045217'
+shadow.ImageColor3 = Color3.new(0, 0, 0)
+shadow.ImageTransparency = 0.8
+shadow.ScaleType = Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+shadow.Parent = mainFrame
+shadow.ZIndex = -1
+
+-- Title bar
+local titleBar = Instance.new('Frame')
+titleBar.Name = 'TitleBar'
+titleBar.BackgroundColor3 = colors.header
+titleBar.BorderSizePixel = 0
+titleBar.Size = UDim2.new(1, 0, 0, 40)  -- Taller title bar
+titleBar.Parent = mainFrame
+
+local titleCorner = Instance.new('UICorner')
+titleCorner.CornerRadius = UDim.new(0, 12)
+titleCorner.Parent = titleBar
+
+local title = Instance.new('TextLabel')
+title.Name = 'Title'
+title.BackgroundTransparency = 1
+title.Position = UDim2.new(0, 15, 0, 0)
+title.Size = UDim2.new(1, -50, 1, 0)
+title.Font = Enum.Font.GothamBold
+title.Text = 'Auto Clicker'  -- Simple title
+title.TextColor3 = colors.text
+title.TextSize = 20  -- Larger text
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = titleBar
+
+-- Close button
+local closeButton = Instance.new('TextButton')
+closeButton.Name = 'CloseButton'
+closeButton.AnchorPoint = Vector2.new(1, 0.5)
+closeButton.BackgroundTransparency = 1
+closeButton.Position = UDim2.new(1, -15, 0.5, 0)
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Text = 'X'
+closeButton.TextColor3 = colors.text
+closeButton.TextSize = 20
+closeButton.Parent = titleBar
+
+closeButton.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
+-- Content frame
+local contentFrame = Instance.new('Frame')
+contentFrame.Name = 'ContentFrame'
+contentFrame.BackgroundTransparency = 1
+contentFrame.Position = UDim2.new(0, 15, 0, 50)
+contentFrame.Size = UDim2.new(1, -30, 1, -60)
+contentFrame.Parent = mainFrame
+
+-- Auto-layout variables
+local currentYPosition = 0
+local elementPadding = 10
+local sectionPadding = 20
+
+-- Function to update main frame size
+local function UpdateFrameSize()
+    local totalHeight = 50 + currentYPosition + 15 -- Title bar + content + bottom padding
+    mainFrame.Size = UDim2.new(0, 350, 0, totalHeight)
+end
+
+-- Create a title for the auto clicker
+local mainTitle = Instance.new('TextLabel')
+mainTitle.Name = 'MainTitle'
+mainTitle.BackgroundTransparency = 1
+mainTitle.Position = UDim2.new(0, 0, 0, currentYPosition)
+mainTitle.Size = UDim2.new(1, 0, 0, 40)
+mainTitle.Font = Enum.Font.GothamBold
+mainTitle.Text = 'Hãy nhấp vào nút để bắt đầu'  -- "Click the button to start" in Vietnamese
+mainTitle.TextColor3 = colors.text
+mainTitle.TextSize = 18
+mainTitle.TextXAlignment = Enum.TextXAlignment.Center
+mainTitle.Parent = contentFrame
+
+currentYPosition = currentYPosition + 40 + elementPadding
+UpdateFrameSize()
+
+-- Create a status indicator
+local statusLabel = Instance.new('TextLabel')
+statusLabel.Name = 'StatusLabel'
+statusLabel.BackgroundTransparency = 1
+statusLabel.Position = UDim2.new(0, 0, 0, currentYPosition)
+statusLabel.Size = UDim2.new(1, 0, 0, 30)
+statusLabel.Font = Enum.Font.GothamSemibold
+statusLabel.Text = 'Trạng thái: Tắt'  -- "Status: Off" in Vietnamese
+statusLabel.TextColor3 = colors.subtext
+statusLabel.TextSize = 16
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+statusLabel.Parent = contentFrame
+
+currentYPosition = currentYPosition + 30 + elementPadding
+UpdateFrameSize()
+
+-- Create start/stop button (large and prominent)
+local toggleButton = Instance.new('TextButton')
+toggleButton.Name = 'ToggleButton'
+toggleButton.BackgroundColor3 = colors.button
+toggleButton.BorderSizePixel = 0
+toggleButton.Position = UDim2.new(0.1, 0, 0, currentYPosition)
+toggleButton.Size = UDim2.new(0.8, 0, 0, 60)  -- Large button
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.Text = 'BẮT ĐẦU CLICK'  -- "START CLICKING" in Vietnamese
+toggleButton.TextColor3 = colors.text
+toggleButton.TextSize = 24  -- Very large text
+toggleButton.Parent = contentFrame
+
+-- Add corner rounding
+local buttonCorner = Instance.new('UICorner')
+buttonCorner.CornerRadius = UDim.new(0, 12)  -- Rounded corners
+buttonCorner.Parent = toggleButton
+
+currentYPosition = currentYPosition + 60 + elementPadding
+UpdateFrameSize()
+
+-- Create speed label
+local speedLabel = Instance.new('TextLabel')
+speedLabel.Name = 'SpeedLabel'
+speedLabel.BackgroundTransparency = 1
+speedLabel.Position = UDim2.new(0, 0, 0, currentYPosition)
+speedLabel.Size = UDim2.new(1, 0, 0, 30)
+speedLabel.Font = Enum.Font.GothamSemibold
+speedLabel.Text = 'Tốc độ click: Trung bình'  -- "Click speed: Medium" in Vietnamese
+speedLabel.TextColor3 = colors.subtext
+speedLabel.TextSize = 16
+speedLabel.TextXAlignment = Enum.TextXAlignment.Center
+speedLabel.Parent = contentFrame
+
+currentYPosition = currentYPosition + 30 + elementPadding
+UpdateFrameSize()
+
+-- Create speed control buttons (Simple, just 3 options)
+local speedFrame = Instance.new('Frame')
+speedFrame.Name = 'SpeedFrame'
+speedFrame.BackgroundTransparency = 1
+speedFrame.Position = UDim2.new(0, 0, 0, currentYPosition)
+speedFrame.Size = UDim2.new(1, 0, 0, 50)
+speedFrame.Parent = contentFrame
+
+local slowButton = Instance.new('TextButton')
+slowButton.Name = 'SlowButton'
+slowButton.BackgroundColor3 = colors.input
+slowButton.BorderSizePixel = 0
+slowButton.Position = UDim2.new(0.05, 0, 0, 0)
+slowButton.Size = UDim2.new(0.28, 0, 1, 0)
+slowButton.Font = Enum.Font.GothamSemibold
+slowButton.Text = 'CHẬM'  -- "SLOW" in Vietnamese
+slowButton.TextColor3 = colors.text
+slowButton.TextSize = 16
+slowButton.Parent = speedFrame
+
+local mediumButton = Instance.new('TextButton')
+mediumButton.Name = 'MediumButton'
+mediumButton.BackgroundColor3 = colors.slider  -- Highlighted as default
+mediumButton.BorderSizePixel = 0
+mediumButton.Position = UDim2.new(0.36, 0, 0, 0)
+mediumButton.Size = UDim2.new(0.28, 0, 1, 0)
+mediumButton.Font = Enum.Font.GothamSemibold
+mediumButton.Text = 'VỪA'  -- "MEDIUM" in Vietnamese
+mediumButton.TextColor3 = colors.text
+mediumButton.TextSize = 16
+mediumButton.Parent = speedFrame
+
+local fastButton = Instance.new('TextButton')
+fastButton.Name = 'FastButton'
+fastButton.BackgroundColor3 = colors.input
+fastButton.BorderSizePixel = 0
+fastButton.Position = UDim2.new(0.67, 0, 0, 0)
+fastButton.Size = UDim2.new(0.28, 0, 1, 0)
+fastButton.Font = Enum.Font.GothamSemibold
+fastButton.Text = 'NHANH'  -- "FAST" in Vietnamese
+fastButton.TextColor3 = colors.text
+fastButton.TextSize = 16
+fastButton.Parent = speedFrame
+
+-- Add corner rounding to speed buttons
+for _, button in pairs(speedFrame:GetChildren()) do
+    if button:IsA('TextButton') then
+        local corner = Instance.new('UICorner')
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = button
+    end
+end
+
+currentYPosition = currentYPosition + 50 + elementPadding
+UpdateFrameSize()
+
+-- Create instruction text
+local instructionLabel = Instance.new('TextLabel')
+instructionLabel.Name = 'InstructionLabel'
+instructionLabel.BackgroundTransparency = 1
+instructionLabel.Position = UDim2.new(0, 0, 0, currentYPosition)
+instructionLabel.Size = UDim2.new(1, 0, 0, 50)
+instructionLabel.Font = Enum.Font.Gotham
+instructionLabel.Text = 'Nhấn phím F để ẩn/hiện giao diện này'  -- "Press F key to hide/show this interface" in Vietnamese
+instructionLabel.TextColor3 = colors.subtext
+instructionLabel.TextSize = 14
+instructionLabel.TextWrapped = true
+instructionLabel.TextXAlignment = Enum.TextXAlignment.Center
+instructionLabel.Parent = contentFrame
+
+currentYPosition = currentYPosition + 50 + elementPadding
+UpdateFrameSize()
+
+-- Auto clicker functionality
+local isClicking = false
+local clickSpeed = 0.5  -- Default medium speed (clicks per second)
+
+-- Function to perform clicking
+local function performClick()
+    if not isClicking then return end
+    
+    -- Simulate mouse click at current position
+    mouse1click()
+    
+    -- Schedule next click
+    RunService.Heartbeat:Wait()
+    task.delay(1/clickSpeed, performClick)
+end
+
+-- Toggle button functionality
+toggleButton.MouseButton1Click:Connect(function()
+    isClicking = not isClicking
+    
+    if isClicking then
+        toggleButton.Text = 'DỪNG CLICK'  -- "STOP CLICKING" in Vietnamese
+        toggleButton.BackgroundColor3 = colors.toggleOff  -- Red when active
+        statusLabel.Text = 'Trạng thái: Đang chạy'  -- "Status: Running" in Vietnamese
+        performClick()  -- Start clicking
+    else
+        toggleButton.Text = 'BẮT ĐẦU CLICK'  -- "START CLICKING" in Vietnamese
+        toggleButton.BackgroundColor3 = colors.button  -- Green when inactive
+        statusLabel.Text = 'Trạng thái: Tắt'  -- "Status: Off" in Vietnamese
+    end
+end)
+
+-- Speed button functionality
+slowButton.MouseButton1Click:Connect(function()
+    clickSpeed = 0.2  -- 1 click every 5 seconds
+    speedLabel.Text = 'Tốc độ click: Chậm'  -- "Click speed: Slow" in Vietnamese
+    
+    -- Highlight selected button
+    slowButton.BackgroundColor3 = colors.slider
+    mediumButton.BackgroundColor3 = colors.input
+    fastButton.BackgroundColor3 = colors.input
+end)
+
+mediumButton.MouseButton1Click:Connect(function()
+    clickSpeed = 0.5  -- 2 clicks per second
+    speedLabel.Text = 'Tốc độ click: Trung bình'  -- "Click speed: Medium" in Vietnamese
+    
+    -- Highlight selected button
+    slowButton.BackgroundColor3 = colors.input
+    mediumButton.BackgroundColor3 = colors.slider
+    fastButton.BackgroundColor3 = colors.input
+end)
+
+fastButton.MouseButton1Click:Connect(function()
+    clickSpeed = 2  -- 5 clicks per second
+    speedLabel.Text = 'Tốc độ click: Nhanh'  -- "Click speed: Fast" in Vietnamese
+    
+    -- Highlight selected button
+    slowButton.BackgroundColor3 = colors.input
+    mediumButton.BackgroundColor3 = colors.input
+    fastButton.BackgroundColor3 = colors.slider
+end)
+
+-- Draggable window functionality
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+-- Show/hide GUI with F key
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.F then
+        gui.Enabled = not gui.Enabled
+    end
+end)
+
+-- Initial notification
+local notification = Instance.new("TextLabel")
+notification.Name = "Notification"
+notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+notification.BackgroundTransparency = 0.3
+notification.Position = UDim2.new(0.5, -150, 0, 20)
+notification.Size = UDim2.new(0, 300, 0, 60)
+notification.Font = Enum.Font.GothamSemibold
+notification.Text = "Auto Clicker đã được kích hoạt!\nNhấn phím F để ẩn/hiện giao diện"
+notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+notification.TextSize = 16
+notification.Parent = playerGui
+
+local notifCorner = Instance.new("UICorner")
+notifCorner.CornerRadius = UDim.new(0, 8)
+notifCorner.Parent = notification
+
+-- Remove notification after 5 seconds
+task.delay(5, function()
+    notification:Destroy()
+end)
+
+-- Print success message to console
+print("Auto Clicker GUI đã được tải thành công!")
